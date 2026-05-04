@@ -788,7 +788,7 @@ export function SmartOptimizationPage() {
       {/* <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-white">Design Optimization</h2>
-          <p className="text-gray-400 mt-1">AI-powered multi-objective jet engine optimization with real-time feedback</p>
+          <p className="text-gray-400 mt-1">PINN + GRU surrogate model · AI-driven multi-objective GTSU-110 start-sequence optimisation</p>
         </div>
         <div className={`flex items-center space-x-2 px-4 py-2 border rounded-lg ${getStatusColor(overallStatus)}`}>
           {getStatusIcon(overallStatus)}
@@ -799,8 +799,8 @@ export function SmartOptimizationPage() {
       </div> */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-white">Design Optimization </h2>
-          <p className="text-gray-400 mt-1">AI-powered multi-objective jet engine optimization with real-time feedback</p>
+          <h2 className="text-3xl font-bold text-white">GTSU-110 Start Optimisation</h2>
+          <p className="text-gray-400 mt-1">PINN + GRU surrogate model · AI-driven multi-objective GTSU-110 start-sequence optimisation</p>
           <p className="text-gray-400 mt-1">Dedicated to optimizing the engineâ€™s most critical failure points</p>
         </div>
 

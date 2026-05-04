@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿import { useState, useMemo } from "react";
 import {
   Activity,
   Gauge,
@@ -22,9 +22,8 @@ import { EngineDigitalTwin } from "../components/EngineDigitalTwin";
 import {
   generatePerformanceData,
   generateAIRecommendations,
-  generateHealthState,
-  generateCurrentTelemetry,
 } from "../utils/mockData";
+import { useGTSUStore } from "../store/useGTSUStore";
 import { getThresholdStatus } from "../utils/thresholds";
 import {
   getRULDetail,
@@ -37,9 +36,11 @@ const MAX_NGG_RPM = 22000;
 const JPT_GROUND_LIMIT = 900;
 
 export function OverviewPage() {
-  const performanceData = generatePerformanceData();
-  const telemetry = generateCurrentTelemetry();
-  const health = generateHealthState();
+  // ── Live telemetry and health from Zustand store (updated every 5s by App.tsx) ──
+  const { telemetry, health } = useGTSUStore();
+
+  // Performance trend data — generated once on mount for charts
+  const performanceData = useMemo(() => generatePerformanceData(), []);
   const [recommendations] = useState(generateAIRecommendations());
   const [selectedKPI, setSelectedKPI] = useState<KPIDetail | null>(null);
 

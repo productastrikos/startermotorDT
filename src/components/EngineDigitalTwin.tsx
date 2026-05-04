@@ -1,517 +1,19 @@
-// import { useState, useEffect } from 'react';
-// import { Activity, AlertCircle } from 'lucide-react';
-
-// interface ComponentStatus {
-//   id: string;
-//   name: string;
-//   status: 'normal' | 'warning' | 'critical';
-//   temperature: number;
-//   efficiency: number;
-// }
-
-// interface EngineDigitalTwinProps {
-//   components: ComponentStatus[];
-//   showTemperature?: boolean;
-//   showEfficiency?: boolean;
-//   title?: string;
-// }
-
-// export function EngineDigitalTwin({
-//   components,
-//   showTemperature = true,
-//   showEfficiency = true,
-//   title = "Engine Digital Twin"
-// }: EngineDigitalTwinProps) {
-//   const [selectedComponent, setSelectedComponent] = useState<ComponentStatus | null>(null);
-//   const [animationPhase, setAnimationPhase] = useState(0);
-
-//   useEffect(() => {
-//     const interval = setInterval(() => {
-//       setAnimationPhase(prev => (prev + 1) % 360);
-//     }, 50);
-//     return () => clearInterval(interval);
-//   }, []);
-
-//   const getStatusColor = (status: 'normal' | 'warning' | 'critical') => {
-//     switch (status) {
-//       case 'critical': return '#ef4444';
-//       case 'warning': return '#f59e0b';
-//       default: return '#10b981';
-//     }
-//   };
-
-//   const getComponentPosition = (id: string) => {
-//     const positions: Record<string, { x: number; y: number; angle: number }> = {
-//       intake: { x: 50, y: 200, angle: 0 },
-//       compressor: { x: 150, y: 200, angle: animationPhase },
-//       combustor: { x: 300, y: 200, angle: 0 },
-//       turbine: { x: 450, y: 200, angle: -animationPhase },
-//       nozzle: { x: 600, y: 200, angle: 0 },
-//       shaft: { x: 300, y: 200, angle: animationPhase / 2 },
-//     };
-//     return positions[id] || { x: 0, y: 0, angle: 0 };
-//   };
-
-//   return (
-//     <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
-//       <div className="flex items-center justify-between mb-4">
-//         <h3 className="text-lg font-semibold text-white">{title}</h3>
-//         <div className="flex items-center space-x-2 text-sm text-gray-400">
-//           <Activity className="w-4 h-4 animate-pulse text-green-500" />
-//           <span>Live Monitoring</span>
-//         </div>
-//       </div>
-
-//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-//         <div className="lg:col-span-2">
-//           <div className="bg-gray-950 rounded-lg p-4 border border-gray-800">
-//             <svg
-//               viewBox="0 0 700 400"
-//               className="w-full h-full"
-//               style={{ minHeight: '300px' }}
-//             >
-//               <defs>
-//                 <linearGradient id="engineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-//                   <stop offset="0%" style={{ stopColor: '#1e293b', stopOpacity: 1 }} />
-//                   <stop offset="50%" style={{ stopColor: '#334155', stopOpacity: 1 }} />
-//                   <stop offset="100%" style={{ stopColor: '#1e293b', stopOpacity: 1 }} />
-//                 </linearGradient>
-
-//                 <filter id="glow">
-//                   <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-//                   <feMerge>
-//                     <feMergeNode in="coloredBlur"/>
-//                     <feMergeNode in="SourceGraphic"/>
-//                   </feMerge>
-//                 </filter>
-
-//                 <radialGradient id="flameGradient">
-//                   <stop offset="0%" style={{ stopColor: '#fbbf24', stopOpacity: 1 }} />
-//                   <stop offset="50%" style={{ stopColor: '#f59e0b', stopOpacity: 0.8 }} />
-//                   <stop offset="100%" style={{ stopColor: '#ef4444', stopOpacity: 0.3 }} />
-//                 </radialGradient>
-//               </defs>
-
-//               <path
-//                 d="M 40 180 L 100 150 L 200 160 L 250 200 L 200 240 L 100 250 Z"
-//                 fill="url(#engineGradient)"
-//                 stroke="#475569"
-//                 strokeWidth="2"
-//                 opacity="0.8"
-//               />
-//               <text x="70" y="205" fill="#94a3b8" fontSize="12" fontWeight="bold">Intake</text>
-
-//               <g transform={`translate(150, 200)`}>
-//                 <circle
-//                   cx="0"
-//                   cy="0"
-//                   r="50"
-//                   fill="url(#engineGradient)"
-//                   stroke={getStatusColor(components.find(c => c.id === 'compressor')?.status || 'normal')}
-//                   strokeWidth="3"
-//                   filter="url(#glow)"
-//                 />
-//                 {[0, 60, 120, 180, 240, 300].map((angle) => {
-//                   const rad = ((angle + animationPhase) * Math.PI) / 180;
-//                   const x1 = Math.cos(rad) * 20;
-//                   const y1 = Math.sin(rad) * 20;
-//                   const x2 = Math.cos(rad) * 45;
-//                   const y2 = Math.sin(rad) * 45;
-//                   return (
-//                     <line
-//                       key={angle}
-//                       x1={x1}
-//                       y1={y1}
-//                       x2={x2}
-//                       y2={y2}
-//                       stroke="#64748b"
-//                       strokeWidth="3"
-//                       strokeLinecap="round"
-//                     />
-//                   );
-//                 })}
-//                 <text x="-35" y="75" fill="#94a3b8" fontSize="12" fontWeight="bold">Compressor</text>
-//               </g>
-
-//               <rect
-//                 x="250"
-//                 y="160"
-//                 width="100"
-//                 height="80"
-//                 fill="url(#engineGradient)"
-//                 stroke={getStatusColor(components.find(c => c.id === 'combustor')?.status || 'normal')}
-//                 strokeWidth="3"
-//                 rx="5"
-//                 filter="url(#glow)"
-//               />
-//               <circle
-//                 cx="300"
-//                 cy="200"
-//                 r={15 + Math.sin(animationPhase * 0.1) * 5}
-//                 fill="url(#flameGradient)"
-//                 opacity={0.6 + Math.sin(animationPhase * 0.1) * 0.2}
-//               />
-//               {[...Array(6)].map((_, i) => {
-//                 const offsetX = Math.sin((animationPhase + i * 60) * 0.05) * 10;
-//                 const offsetY = Math.sin((animationPhase + i * 30) * 0.08) * 8;
-//                 return (
-//                   <circle
-//                     key={i}
-//                     cx={300 + offsetX}
-//                     cy={200 + offsetY}
-//                     r={3 + Math.sin((animationPhase + i * 45) * 0.1) * 2}
-//                     fill="#fbbf24"
-//                     opacity={0.5 + Math.sin((animationPhase + i * 30) * 0.1) * 0.3}
-//                   />
-//                 );
-//               })}
-//               <text x="265" y="260" fill="#94a3b8" fontSize="12" fontWeight="bold">Combustor</text>
-
-//               <g transform={`translate(450, 200)`}>
-//                 <circle
-//                   cx="0"
-//                   cy="0"
-//                   r="50"
-//                   fill="url(#engineGradient)"
-//                   stroke={getStatusColor(components.find(c => c.id === 'turbine')?.status || 'normal')}
-//                   strokeWidth="3"
-//                   filter="url(#glow)"
-//                 />
-//                 {[0, 90, 180, 270].map((angle) => {
-//                   const rad = ((-animationPhase + angle) * Math.PI) / 180;
-//                   const x1 = Math.cos(rad) * 15;
-//                   const y1 = Math.sin(rad) * 15;
-//                   const x2 = Math.cos(rad) * 48;
-//                   const y2 = Math.sin(rad) * 48;
-//                   const xMid = Math.cos(rad) * 35;
-//                   const yMid = Math.sin(rad) * 35;
-//                   const perpRad = rad + Math.PI / 2;
-//                   const xCurve = xMid + Math.cos(perpRad) * 10;
-//                   const yCurve = yMid + Math.sin(perpRad) * 10;
-
-//                   return (
-//                     <path
-//                       key={angle}
-//                       d={`M ${x1} ${y1} Q ${xCurve} ${yCurve} ${x2} ${y2}`}
-//                       fill="none"
-//                       stroke="#64748b"
-//                       strokeWidth="4"
-//                       strokeLinecap="round"
-//                     />
-//                   );
-//                 })}
-//                 <text x="-25" y="75" fill="#94a3b8" fontSize="12" fontWeight="bold">Turbine</text>
-//               </g>
-
-//               <path
-//                 d="M 500 180 L 600 150 L 660 160 L 680 200 L 660 240 L 600 250 Z"
-//                 fill="url(#engineGradient)"
-//                 stroke="#475569"
-//                 strokeWidth="2"
-//                 opacity="0.8"
-//               />
-//               <text x="580" y="205" fill="#94a3b8" fontSize="12" fontWeight="bold">Nozzle</text>
-
-//               <line
-//                 x1="150"
-//                 y1="200"
-//                 x2="450"
-//                 y2="200"
-//                 stroke="#64748b"
-//                 strokeWidth="6"
-//                 strokeDasharray={`${animationPhase % 20} 10`}
-//                 opacity="0.3"
-//               />
-
-//               {[100, 200, 300, 400, 500, 600].map((x, i) => {
-//                 const flowY = 200 + Math.sin((animationPhase + i * 30) * 0.1) * 15;
-//                 return (
-//                   <circle
-//                     key={i}
-//                     cx={x + (animationPhase % 50)}
-//                     cy={flowY}
-//                     r="2"
-//                     fill="#3b82f6"
-//                     opacity="0.6"
-//                   />
-//                 );
-//               })}
-
-//               {components.map((comp) => {
-//                 const pos = getComponentPosition(comp.id);
-//                 if (comp.status === 'critical' || comp.status === 'warning') {
-//                   return (
-//                     <g key={`alert-${comp.id}`}>
-//                       <circle
-//                         cx={pos.x}
-//                         cy={pos.y - 70}
-//                         r="12"
-//                         fill={getStatusColor(comp.status)}
-//                         opacity="0.2"
-//                         className="animate-ping"
-//                       />
-//                       <circle
-//                         cx={pos.x}
-//                         cy={pos.y - 70}
-//                         r="8"
-//                         fill={getStatusColor(comp.status)}
-//                       />
-//                       <text
-//                         x={pos.x}
-//                         y={pos.y - 67}
-//                         fill="white"
-//                         fontSize="12"
-//                         textAnchor="middle"
-//                         fontWeight="bold"
-//                       >
-//                         !
-//                       </text>
-//                     </g>
-//                   );
-//                 }
-//                 return null;
-//               })}
-
-//               {components.map((comp) => {
-//                 const pos = getComponentPosition(comp.id);
-//                 return (
-//                   <rect
-//                     key={`hitbox-${comp.id}`}
-//                     x={pos.x - 40}
-//                     y={pos.y - 40}
-//                     width="80"
-//                     height="80"
-//                     fill="transparent"
-//                     className="cursor-pointer"
-//                     onMouseEnter={() => setSelectedComponent(comp)}
-//                     onMouseLeave={() => setSelectedComponent(null)}
-//                   />
-//                 );
-//               })}
-//             </svg>
-//           </div>
-//         </div>
-
-//         <div className="space-y-3">
-//           <div className="bg-gray-950 rounded-lg p-4 border border-gray-800">
-//             <h4 className="text-sm font-semibold text-white mb-3">Component Status</h4>
-//             <div className="space-y-2">
-//               {components.map((comp) => (
-//                 <div
-//                   key={comp.id}
-//                   className={`p-2 rounded border transition-all cursor-pointer ${
-//                     selectedComponent?.id === comp.id
-//                       ? 'bg-gray-800 border-gray-600'
-//                       : 'bg-gray-900/50 border-gray-800'
-//                   }`}
-//                   onMouseEnter={() => setSelectedComponent(comp)}
-//                   onMouseLeave={() => setSelectedComponent(null)}
-//                 >
-//                   <div className="flex items-center justify-between">
-//                     <span className="text-xs text-gray-300 font-medium">{comp.name}</span>
-//                     <div
-//                       className="w-2 h-2 rounded-full"
-//                       style={{ backgroundColor: getStatusColor(comp.status) }}
-//                     />
-//                   </div>
-//                   {selectedComponent?.id === comp.id && (
-//                     <div className="mt-2 space-y-1">
-//                       {showTemperature && (
-//                         <div className="flex justify-between text-xs">
-//                           <span className="text-gray-500">Temperature:</span>
-//                           <span className="text-white font-semibold">{comp.temperature}°C</span>
-//                         </div>
-//                       )}
-//                       {showEfficiency && (
-//                         <div className="flex justify-between text-xs">
-//                           <span className="text-gray-500">Efficiency:</span>
-//                           <span className="text-white font-semibold">{comp.efficiency}%</span>
-//                         </div>
-//                       )}
-//                     </div>
-//                   )}
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-
-//           {selectedComponent && (
-//             <div className="bg-gray-950 rounded-lg p-4 border border-gray-800">
-//               <div className="flex items-start space-x-2">
-//                 {selectedComponent.status !== 'normal' ? (
-//                   <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-//                 ) : (
-//                   <Activity className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-//                 )}
-//                 <div>
-//                   <h4 className="text-sm font-semibold text-white mb-1">{selectedComponent.name}</h4>
-//                   <p className="text-xs text-gray-400">
-//                     {selectedComponent.status === 'critical'
-//                       ? 'Critical condition - immediate attention required'
-//                       : selectedComponent.status === 'warning'
-//                       ? 'Warning - monitor closely'
-//                       : 'Operating within normal parameters'}
-//                   </p>
-//                 </div>
-//               </div>
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// // import { useState, useEffect } from 'react';
-// // import { Activity, AlertCircle } from 'lucide-react';
-// // import { Canvas } from '@react-three/fiber';
-// // import { OrbitControls, Stage, useGLTF } from '@react-three/drei';
-
-// // interface ComponentStatus {
-// //   id: string;
-// //   name: string;
-// //   status: 'normal' | 'warning' | 'critical';
-// //   temperature: number;
-// //   efficiency: number;
-// // }
-
-// // interface EngineDigitalTwinProps {
-// //   components: ComponentStatus[];
-// //   showTemperature?: boolean;
-// //   showEfficiency?: boolean;
-// //   title?: string;
-// //   modelUrl?: string; // URL to the 3D model (GLB/GLTF)
-// // }
-
-// // function EngineModel({ modelUrl }: { modelUrl: string }) {
-// //   const { scene } = useGLTF(modelUrl);
-// //   return <primitive object={scene} scale={0.5} />;
-// // }
-
-// // export function EngineDigitalTwin({
-// //   components,
-// //   showTemperature = true,
-// //   showEfficiency = true,
-// //   title = "Engine Digital Twin",
-// //   modelUrl = "/Engine.gltf" // default path to your 3D model
-// // }: EngineDigitalTwinProps) {
-// //   const [selectedComponent, setSelectedComponent] = useState<ComponentStatus | null>(null);
-
-// //   const getStatusColor = (status: 'normal' | 'warning' | 'critical') => {
-// //     switch (status) {
-// //       case 'critical': return '#ef4444';
-// //       case 'warning': return '#f59e0b';
-// //       default: return '#10b981';
-// //     }
-// //   };
-
-// //   return (
-// //     <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
-// //       <div className="flex items-center justify-between mb-4">
-// //         <h3 className="text-lg font-semibold text-white">{title}</h3>
-// //         <div className="flex items-center space-x-2 text-sm text-gray-400">
-// //           <Activity className="w-4 h-4 animate-pulse text-green-500" />
-// //           <span>Live Monitoring</span>
-// //         </div>
-// //       </div>
-
-// //       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-// //         {/* 3D Engine Viewer */}
-// //         <div className="lg:col-span-2 bg-gray-950 rounded-lg p-4 border border-gray-800 h-[400px]">
-// //           <Canvas camera={{ position: [0, 1, 5], fov: 50 }}>
-// //             <ambientLight intensity={0.5} />
-// //             <directionalLight position={[5, 5, 5]} intensity={1} />
-// //             <Stage environment="city" intensity={0.7}>
-// //               <EngineModel modelUrl={modelUrl} />
-// //             </Stage>
-// //             <OrbitControls enablePan={true} enableZoom={true} enableRotate={true} />
-// //           </Canvas>
-// //         </div>
-
-// //         {/* Component Status Panel */}
-// //         <div className="space-y-3">
-// //           <div className="bg-gray-950 rounded-lg p-4 border border-gray-800">
-// //             <h4 className="text-sm font-semibold text-white mb-3">Component Status</h4>
-// //             <div className="space-y-2">
-// //               {components.map((comp) => (
-// //                 <div
-// //                   key={comp.id}
-// //                   className={`p-2 rounded border transition-all cursor-pointer ${
-// //                     selectedComponent?.id === comp.id
-// //                       ? 'bg-gray-800 border-gray-600'
-// //                       : 'bg-gray-900/50 border-gray-800'
-// //                   }`}
-// //                   onMouseEnter={() => setSelectedComponent(comp)}
-// //                   onMouseLeave={() => setSelectedComponent(null)}
-// //                 >
-// //                   <div className="flex items-center justify-between">
-// //                     <span className="text-xs text-gray-300 font-medium">{comp.name}</span>
-// //                     <div
-// //                       className="w-2 h-2 rounded-full"
-// //                       style={{ backgroundColor: getStatusColor(comp.status) }}
-// //                     />
-// //                   </div>
-// //                   {selectedComponent?.id === comp.id && (
-// //                     <div className="mt-2 space-y-1">
-// //                       {showTemperature && (
-// //                         <div className="flex justify-between text-xs">
-// //                           <span className="text-gray-500">Temperature:</span>
-// //                           <span className="text-white font-semibold">{comp.temperature}°C</span>
-// //                         </div>
-// //                       )}
-// //                       {showEfficiency && (
-// //                         <div className="flex justify-between text-xs">
-// //                           <span className="text-gray-500">Efficiency:</span>
-// //                           <span className="text-white font-semibold">{comp.efficiency}%</span>
-// //                         </div>
-// //                       )}
-// //                     </div>
-// //                   )}
-// //                 </div>
-// //               ))}
-// //             </div>
-// //           </div>
-
-// //           {selectedComponent && (
-// //             <div className="bg-gray-950 rounded-lg p-4 border border-gray-800">
-// //               <div className="flex items-start space-x-2">
-// //                 {selectedComponent.status !== 'normal' ? (
-// //                   <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-// //                 ) : (
-// //                   <Activity className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-// //                 )}
-// //                 <div>
-// //                   <h4 className="text-sm font-semibold text-white mb-1">{selectedComponent.name}</h4>
-// //                   <p className="text-xs text-gray-400">
-// //                     {selectedComponent.status === 'critical'
-// //                       ? 'Critical condition - immediate attention required'
-// //                       : selectedComponent.status === 'warning'
-// //                       ? 'Warning - monitor closely'
-// //                       : 'Operating within normal parameters'}
-// //                   </p>
-// //                 </div>
-// //               </div>
-// //             </div>
-// //           )}
-// //         </div>
-// //       </div>
-// //     </div>
-// //   );
-// // }
-
-import { useState, Suspense } from "react";
-
-import { Activity, AlertCircle } from "lucide-react";
+import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stage, useGLTF, Html } from "@react-three/drei";
+import { OrbitControls, Stage, useGLTF } from "@react-three/drei";
+import { useGTSUStore } from "../store/useGTSUStore";
 
-interface ComponentStatus {
+const MAX_NGG_RPM = 22000;
+const JPT_GROUND_LIMIT = 900;
+
+// ── Props kept for backward-compat (OverviewPage calls with no props) ──────
+export interface ComponentStatus {
   id: string;
   name: string;
   status: "normal" | "warning" | "critical";
   temperature: number;
   efficiency: number;
-  position?: [number, number, number]; // optional for 3D placement
+  position?: [number, number, number];
 }
 
 interface EngineDigitalTwinProps {
@@ -519,165 +21,309 @@ interface EngineDigitalTwinProps {
   showTemperature?: boolean;
   showEfficiency?: boolean;
   title?: string;
-  modelUrl?: string; // URL to the 3D model (GLB/GLTF)
+  modelUrl?: string;
 }
 
-// Engine model with hoverable invisible boxes
-function EngineModel({ modelUrl, components }: { modelUrl: string; components: ComponentStatus[] }) {
-  const { scene } = useGLTF(modelUrl);
-  const [hovered, setHovered] = useState<ComponentStatus | null>(null);
+// ── Color palette matching dashboard theme ────────────────────────────────
+const STATUS_COLORS = {
+  critical: { border: "#ef4444", text: "#ef4444", bg: "rgba(239,68,68,0.12)", glow: "#ef4444" },
+  warning:  { border: "#f59e0b", text: "#f59e0b", bg: "rgba(245,158,11,0.12)", glow: "#f59e0b" },
+  normal:   { border: "#10b981", text: "#10b981", bg: "rgba(16,185,129,0.12)", glow: "#10b981" },
+} as const;
 
+// ── Single HUD telemetry card ─────────────────────────────────────────────
+function HudCard({
+  label,
+  value,
+  unit,
+  sublabel,
+  status,
+}: {
+  label: string;
+  value: string;
+  unit: string;
+  sublabel?: string;
+  status: "normal" | "warning" | "critical";
+}) {
+  const c = STATUS_COLORS[status];
   return (
-    <>
-      <primitive object={scene} scale={0.5} />
-
-      {components.map((comp) => (
-        <mesh key={comp.id} position={comp.position ?? [0, 0, 0]} onPointerOver={() => setHovered(comp)} onPointerOut={() => setHovered(null)}>
-          {/* Invisible box for hover */}
-          <boxGeometry args={[0.8, 0.8, 0.8]} />
-          <meshBasicMaterial transparent opacity={0} />
-          {/* <meshBasicMaterial color="orange" opacity={0.5} transparent /> */}
-        </mesh>
-      ))}
-
-      {hovered && (
-        <Html
-          position={hovered.position ?? [0, 0, 0]}
-          center
+    <div
+      style={{
+        background: "rgba(4,7,18,0.90)",
+        border: `1.5px solid ${c.border}`,
+        borderRadius: 7,
+        padding: "5px 10px",
+        minWidth: 100,
+        boxShadow: `0 0 14px ${c.bg}`,
+        backdropFilter: "blur(8px)",
+      }}
+    >
+      {/* status dot + label */}
+      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
+        <span
           style={{
-            background: "rgba(0,0,0,0.7)",
-            padding: "4px 8px",
-            borderRadius: "4px",
-            color: "white",
-            fontSize: "12px",
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: c.glow,
+            display: "inline-block",
+            boxShadow: `0 0 6px ${c.glow}`,
+            flexShrink: 0,
+          }}
+        />
+        <span
+          style={{
+            fontSize: 8,
+            color: "#9ca3af",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
             whiteSpace: "nowrap",
           }}
         >
-          {/* {`${hovered.name} | Temp: ${hovered.temperature}°C | Eff: ${hovered.efficiency}% | Status: ${hovered.status}`} */}
-          <div>{hovered.name}</div>
-          <div>Temp: {hovered.temperature}°C</div>
-          <div>Eff: {hovered.efficiency}%</div>
-          <div>Status: {hovered.status}</div>
-        </Html>
+          {label}
+        </span>
+      </div>
+      {/* main value */}
+      <div
+        style={{
+          fontSize: 17,
+          fontWeight: 700,
+          color: c.text,
+          lineHeight: 1.15,
+          fontFamily: "'Courier New', monospace",
+          letterSpacing: "-0.02em",
+        }}
+      >
+        {value}
+        {unit && (
+          <span style={{ fontSize: 9, fontWeight: 400, marginLeft: 3, color: "#6b7280" }}>
+            {unit}
+          </span>
+        )}
+      </div>
+      {/* sub-label */}
+      {sublabel && (
+        <div style={{ fontSize: 8.5, color: "#4b5563", marginTop: 2, whiteSpace: "nowrap" }}>
+          {sublabel}
+        </div>
       )}
-    </>
+    </div>
   );
 }
 
-export function EngineDigitalTwin({
-  components = [],
-  showTemperature = true,
-  showEfficiency = true,
-  title = "GTSU-110 Digital Twin",
-  modelUrl = "/turbine.glb",
-}: EngineDigitalTwinProps) {
-  const [selectedComponent, setSelectedComponent] = useState<ComponentStatus | null>(null);
+// ── 3D model primitive ─────────────────────────────────────────────────────
+function GTSUModel({ modelUrl }: { modelUrl: string }) {
+  const { scene } = useGLTF(modelUrl);
+  return <primitive object={scene} scale={0.5} />;
+}
 
-  const getStatusColor = (status: "normal" | "warning" | "critical") => {
-    switch (status) {
-      case "critical":
-        return "#ef4444";
-      case "warning":
-        return "#f59e0b";
-      default:
-        return "#10b981";
-    }
-  };
+// ── Main export ───────────────────────────────────────────────────────────
+export function EngineDigitalTwin({
+  // components prop accepted but not used — live telemetry drives the HUD
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  components = [],
+  title = "GTSU-110 Digital Twin",
+  modelUrl = "/Starter Asm..glb",
+}: EngineDigitalTwinProps) {
+  const { telemetry, health } = useGTSUStore();
+
+  // ── Derive status (mirrors App.tsx threshold logic) ───────────────────
+  const jpt1Status: "normal" | "warning" | "critical" =
+    telemetry.jpt1 >= JPT_GROUND_LIMIT ? "critical" : telemetry.jpt1 >= 820 ? "warning" : "normal";
+
+  const nggPct = telemetry.nggPct ?? (telemetry.ngg / MAX_NGG_RPM) * 100;
+  const nggStatus: "normal" | "warning" | "critical" =
+    nggPct > 97 ? "critical" : nggPct > 92 ? "warning" : "normal";
+
+  const p2p1Status: "normal" | "warning" | "critical" =
+    telemetry.p2p1 < 3.4 ? "critical" : telemetry.p2p1 < 3.6 ? "warning" : "normal";
+
+  const foulingStatus: "normal" | "warning" | "critical" =
+    health.compressorFoulingIndex >= 50
+      ? "critical"
+      : health.compressorFoulingIndex >= 25
+      ? "warning"
+      : "normal";
+
+  const secuStatus: "normal" | "warning" | "critical" =
+    !telemetry.secuMainHealthy || !telemetry.bitPass
+      ? "critical"
+      : telemetry.ipsMode > 0
+      ? "warning"
+      : "normal";
+
+  const fuelStatus: "normal" | "warning" | "critical" =
+    telemetry.fuelMassFlow > 8.5 ? "critical" : telemetry.fuelMassFlow > 7.5 ? "warning" : "normal";
+
+  const ipsLabels = [
+    "IPS Mode 0 — Closed-Loop",
+    "IPS Mode 1 — Emergency Armed",
+    "IPS Mode 2 — Open-Loop",
+  ];
+
+  // ── Ambient tint color reflects fleet health ──────────────────────────
+  const anyC = [jpt1Status, nggStatus, p2p1Status, secuStatus].includes("critical");
+  const anyW = [jpt1Status, nggStatus, p2p1Status, secuStatus].includes("warning");
+  const ambientColor = anyC ? "#ff3a3a" : anyW ? "#ffb347" : "#70ffd8";
+
+  // ── Live indicator dot class ──────────────────────────────────────────
+  const dotCls = anyC ? "bg-red-500" : anyW ? "bg-amber-400" : "bg-emerald-400";
 
   return (
-    <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white">{title}</h3>
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <Activity className="w-4 h-4 animate-pulse text-green-500" />
-          {/* <span>Live Monitoring</span> */}
-        </div>
-      </div>
+    <div className="w-full h-full relative overflow-hidden">
+      {/* ── 3D Canvas ──────────────────────────────────────────────────── */}
+      <Canvas
+        camera={{ position: [0, 0.6, 5], fov: 44 }}
+        style={{ background: "transparent", width: "100%", height: "100%" }}
+      >
+        {/* Health-tinted ambient + neutral key light */}
+        <ambientLight intensity={0.55} color={ambientColor} />
+        <directionalLight position={[6, 8, 5]} intensity={1.3} color="#ffffff" />
+        <directionalLight position={[-4, 2, -4]} intensity={0.35} color="#a8c4e8" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* 3D Engine Viewer */}
-        {/* <div className="lg:col-span-2 bg-white rounded-lg p-4 border border-gray-800 h-[400px]"> */}
-        <div className="lg:col-span-2 bg-gray-800 rounded-lg p-4 border border-gray-800 h-[400px]">
-          {/* <Canvas camera={{ position: [0, 1, 5], fov: 50 }}>
-            <ambientLight intensity={0.5} />
-            <directionalLight position={[5, 5, 5]} intensity={1} />
-            <Stage environment={null} intensity={0.7}>
-              <EngineModel modelUrl={modelUrl} components={components} />
-            </Stage>
-            <OrbitControls enablePan enableZoom enableRotate />
-          </Canvas> */}
-          <Canvas camera={{ position: [0, 1, 5], fov: 50 }}>
-            <ambientLight intensity={0.5} />
-            <directionalLight position={[5, 5, 5]} intensity={1} />
-            <Suspense fallback={null}>
-              <Stage environment={null} intensity={0.7}>
-                <EngineModel modelUrl={modelUrl} components={components} />
-              </Stage>
-            </Suspense>
-            <OrbitControls enablePan enableZoom enableRotate />
-          </Canvas>
+        <Suspense fallback={null}>
+          <Stage environment={null} intensity={0.55} adjustCamera>
+            <GTSUModel modelUrl={modelUrl} />
+          </Stage>
+        </Suspense>
+
+        <OrbitControls
+          enablePan
+          enableZoom
+          enableRotate
+          autoRotate
+          autoRotateSpeed={0.5}
+        />
+      </Canvas>
+
+      {/* ── CSS HUD overlay ─────────────────────────────────────────────
+          Positioned to mirror the GTSU-110 reference image (Starter Asm..JPG):
+            ┌──[Fouling/RUL]─────[Title]─────[Ngg/Speed]──┐
+            │                                               │
+            │ [JPT1/Combustor]   🔧 3D MODEL  [P2/P1 Comp] │
+            │                                               │
+            └──[Fuel/Stepper]──[OAT/Bus]────[SECU/IPS]────┘
+      ──────────────────────────────────────────────────── */}
+      <div className="absolute inset-0 pointer-events-none select-none">
+
+        {/* TOP-LEFT  ── Compressor Fouling (gas-inlet dome, left end) */}
+        <div className="absolute top-3 left-3">
+          <HudCard
+            label="Compressor Fouling"
+            value={health.compressorFoulingIndex.toFixed(1)}
+            unit="%"
+            sublabel={`RUL: ${health.rul} h  ·  ${health.rulCycles} cycles`}
+            status={foulingStatus}
+          />
         </div>
 
-        {/* Component Status Panel */}
-        <div className="space-y-3">
-          <div className="bg-gray-950 rounded-lg p-4 border border-gray-800">
-            <h4 className="text-sm font-semibold text-white mb-3">Component Status</h4>
-            <div className="space-y-2">
-              {components.map((comp, index) => (
-                <div
-                  key={`${comp.id}-${index}`}
-                  className={`p-2 rounded border transition-all cursor-pointer ${
-                    selectedComponent?.id === comp.id ? "bg-gray-800 border-gray-600" : "bg-gray-900/50 border-gray-800"
-                  }`}
-                  onMouseEnter={() => setSelectedComponent(comp)}
-                  onMouseLeave={() => setSelectedComponent(null)}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-300 font-medium">{comp.name}</span>
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getStatusColor(comp.status) }} />
-                  </div>
-                  {selectedComponent?.id === comp.id && (
-                    <div className="mt-2 space-y-1">
-                      {showTemperature && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-gray-500">Temperature:</span>
-                          <span className="text-white font-semibold">{comp.temperature}°C</span>
-                        </div>
-                      )}
-                      {showEfficiency && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-gray-500">Efficiency:</span>
-                          <span className="text-white font-semibold">{comp.efficiency}%</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
+        {/* TOP-RIGHT ── Ngg Speed (stator / rotor winding center) */}
+        <div className="absolute top-3 right-3">
+          <HudCard
+            label="Ngg — Gas Generator"
+            value={nggPct.toFixed(1)}
+            unit="% Ngg"
+            sublabel={`${telemetry.ngg.toLocaleString()} RPM  ·  max 22 000`}
+            status={nggStatus}
+          />
+        </div>
+
+        {/* MID-LEFT  ── JPT1 (combustor dome — left end of model) */}
+        <div className="absolute top-1/2 left-3 -translate-y-1/2">
+          <HudCard
+            label="JPT1 — Combustor"
+            value={Math.round(telemetry.jpt1).toString()}
+            unit="°C"
+            sublabel={`Gnd limit: ${JPT_GROUND_LIMIT}°C  ·  Δ+${health.residualJpt1.toFixed(1)}°C`}
+            status={jpt1Status}
+          />
+        </div>
+
+        {/* MID-RIGHT ── P2/P1 (compressor / rotor-gear section, right end) */}
+        <div className="absolute top-1/2 right-3 -translate-y-1/2">
+          <HudCard
+            label="P2/P1 — Compressor"
+            value={telemetry.p2p1.toFixed(3)}
+            unit=":1"
+            sublabel={`Base: ${health.baselineP2p1}  ·  Δ${health.residualP2p1.toFixed(3)}`}
+            status={p2p1Status}
+          />
+        </div>
+
+        {/* BOTTOM-LEFT ── Fuel Flow / Stepper (stepper motor, bottom-front) */}
+        <div className="absolute bottom-3 left-3">
+          <HudCard
+            label="Fuel Flow — Stepper"
+            value={telemetry.fuelMassFlow.toFixed(2)}
+            unit="kg/h"
+            sublabel={`Pos: ${telemetry.stepperPosition} steps  ·  3-phase motor`}
+            status={fuelStatus}
+          />
+        </div>
+
+        {/* BOTTOM-RIGHT ── SECU / IPS (end-cap / control unit) */}
+        <div className="absolute bottom-3 right-3">
+          <HudCard
+            label="SECU / IPS — BIT"
+            value={telemetry.secuMainHealthy && telemetry.bitPass ? "PASS" : "FAIL"}
+            unit=""
+            sublabel={ipsLabels[telemetry.ipsMode]}
+            status={secuStatus}
+          />
+        </div>
+
+        {/* CENTER-TOP ── model title badge */}
+        <div className="absolute top-3 left-1/2 -translate-x-1/2">
+          <div
+            style={{
+              background: "rgba(4,7,18,0.80)",
+              border: "1px solid rgba(99,102,241,0.40)",
+              borderRadius: 6,
+              padding: "3px 12px",
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <span className={`inline-block w-1.5 h-1.5 rounded-full animate-pulse ${dotCls}`} />
+              <span
+                style={{
+                  fontSize: 9,
+                  color: "#a5b4fc",
+                  letterSpacing: "0.09em",
+                  fontFamily: "'Courier New', monospace",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {title} &nbsp;·&nbsp; LIVE ISO 23247
+              </span>
             </div>
           </div>
+        </div>
 
-          {selectedComponent && (
-            <div className="bg-gray-950 rounded-lg p-4 border border-gray-800">
-              <div className="flex items-start space-x-2">
-                {selectedComponent.status !== "normal" ? (
-                  <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                ) : (
-                  <Activity className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                )}
-                <div>
-                  <h4 className="text-sm font-semibold text-white mb-1">{selectedComponent.name}</h4>
-                  <p className="text-xs text-gray-400">
-                    {selectedComponent.status === "critical"
-                      ? "Critical condition - immediate attention required"
-                      : selectedComponent.status === "warning"
-                      ? "Warning - monitor closely"
-                      : "Operating within normal parameters"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+        {/* CENTER-BOTTOM ── OAT / bus health strip */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
+          <div
+            style={{
+              background: "rgba(4,7,18,0.80)",
+              border: "1px solid rgba(71,85,105,0.45)",
+              borderRadius: 6,
+              padding: "3px 12px",
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            <span
+              style={{
+                fontSize: 9,
+                color: "#6b7280",
+                fontFamily: "'Courier New', monospace",
+                whiteSpace: "nowrap",
+              }}
+            >
+              OAT {telemetry.oat.toFixed(1)} °C &nbsp;|&nbsp;
+              MIL-1553B {telemetry.milBusHealth}% &nbsp;|&nbsp;
+              ARINC 429 {telemetry.arinc429Health}%
+            </span>
+          </div>
         </div>
       </div>
     </div>
