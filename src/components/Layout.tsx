@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Activity, AlertTriangle, Sparkles, Zap, Brain, Shield } from "lucide-react";
+import { useGTSUStore } from "../store/useGTSUStore";
 
 interface LayoutProps {
   children: ReactNode;
@@ -22,6 +23,7 @@ interface LayoutPropsWithNav extends LayoutProps {
 }
 
 export function Layout({ children, currentPage, onPageChange }: LayoutPropsWithNav) {
+  const { operationMode, setOperationMode } = useGTSUStore();
   const navItems: { id: Page; label: string; icon: ReactNode; group?: string }[] = [
     { id: "overview", label: "GTSU Overview", icon: <Activity className="w-5 h-5" />, group: "Monitor" },
     { id: "start-sequence", label: "Start Sequence", icon: <Zap className="w-5 h-5" />, group: "Monitor" },
@@ -50,8 +52,28 @@ export function Layout({ children, currentPage, onPageChange }: LayoutPropsWithN
             </div>
             <div className="flex items-center space-x-3">
               <span className="text-xs text-gray-500">ISO 23247 · MIL-STD-1553B · DO-178C</span>
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs text-green-500">LIVE</span>
+              <div className="flex items-center rounded-md border border-gray-700 bg-gray-950 p-1 gap-1">
+                <button
+                  onClick={() => setOperationMode("live-test")}
+                  className={`px-2 py-1 text-[10px] rounded transition-colors ${
+                    operationMode === "live-test"
+                      ? "bg-green-500/20 text-green-400"
+                      : "text-gray-400 hover:text-gray-200"
+                  }`}
+                >
+                  LIVE TEST
+                </button>
+                <button
+                  onClick={() => setOperationMode("post-test-review")}
+                  className={`px-2 py-1 text-[10px] rounded transition-colors ${
+                    operationMode === "post-test-review"
+                      ? "bg-blue-500/20 text-blue-400"
+                      : "text-gray-400 hover:text-gray-200"
+                  }`}
+                >
+                  POST-TEST REVIEW
+                </button>
+              </div>
             </div>
           </div>
         </div>

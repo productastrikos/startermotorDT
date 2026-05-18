@@ -62,7 +62,7 @@ export const generateCurrentTelemetry = (): GTSUTelemetry => {
     jpt1: Math.round(r(648, 80)),        // 568–728 occasionally peaks near 820 warning
     ngg,
     nggPct: (ngg / MAX_NGG_RPM) * 100,
-    p2p1: parseFloat(r(3.74, 0.12).toFixed(3)),
+    p2p1: parseFloat(r(3.74, 0.12).toFixed(2)),
     oat: parseFloat(r(31, 4).toFixed(1)),
     stepperPosition: Math.round(r(148, 8)),
     fuelMassFlow: parseFloat(r(6.4, 0.4).toFixed(2)),
@@ -80,21 +80,26 @@ export const generateCurrentTelemetry = (): GTSUTelemetry => {
 
 export const generateHealthState = (): GTSUHealthState => {
   const r = (base: number, spread: number) => base + (Math.random() - 0.5) * 2 * spread;
+  const foulingIdx = parseFloat(r(24, 5).toFixed(1));
+  const thermalFatigue = parseFloat(r(22, 4).toFixed(1));
   return {
     timestamp: new Date(),
     starterReadiness: parseFloat(r(82, 6).toFixed(1)),   // 76–88, sometimes < 80 warning
     rul: Math.round(r(392, 30)),                          // 362–422, well above 250 warning
     rulCycles: Math.round(r(210, 10)),
-    compressorFoulingIndex: parseFloat(r(24, 5).toFixed(1)), // 19–29, sometimes > 25 warning
+    compressorFoulingIndex: foulingIdx,
     creepLifeConsumption: parseFloat(r(18, 4).toFixed(1)),
-    thermalFatigueAccumulation: parseFloat(r(22, 4).toFixed(1)),
+    thermalFatigueAccumulation: thermalFatigue,
     hotStartRisk: parseFloat(r(14, 8).toFixed(1)),        // 6–22, occasionally > 30 warning
     hungStartProbability: parseFloat(r(8, 4).toFixed(1)),
-    virtualSensorConfidence: parseFloat(r(0.94, 0.04).toFixed(3)),
+    virtualSensorConfidence: parseFloat(r(0.94, 0.04).toFixed(2)),
     baselineJpt1: 635,
     baselineP2p1: 3.86,
     residualJpt1: parseFloat(r(13, 3).toFixed(1)),
-    residualP2p1: parseFloat(r(-0.12, 0.04).toFixed(3)),
+    residualP2p1: parseFloat(r(-0.12, 0.04).toFixed(2)),
+    // Derived health scores (100 = perfect, degrades with fouling / thermal fatigue)
+    compressorHealth: Math.max(0, Math.min(100, parseFloat((100 - foulingIdx * 1.8).toFixed(1)))),
+    combustorHealth:  Math.max(0, Math.min(100, parseFloat((100 - thermalFatigue * 1.6).toFixed(1)))),
   };
 };
 

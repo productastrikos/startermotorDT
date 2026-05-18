@@ -63,6 +63,10 @@ export interface GTSUHealthState {
   baselineP2p1: number;
   residualJpt1: number;
   residualP2p1: number;
+  /** Compressor component health score 0–100 (100 = new, 0 = failed) */
+  compressorHealth: number;
+  /** Combustor / hot-section health score 0–100 */
+  combustorHealth: number;
 }
 
 // ─── Start-sequence time-series ──────────────────────────────────────────────
@@ -162,3 +166,48 @@ export interface DesignIteration {
   fuelStepperBias: number;
   startDuration: number;
 }
+
+// ─── Extended Telemetry (with vibration + thermal life) ──────────────────────
+
+export interface ExtendedTelemetry extends GTSUTelemetry {
+  vibration:           number;   // mm/s
+  thermalLifeConsumed: number;   // cumulative % of thermal life budget
+  dataQuality:         number;   // 0–1 per-frame data integrity
+  cumulativeStarts:    number;   // total start count for lifecycle tracking
+}
+
+// ─── Maintenance Actions ─────────────────────────────────────────────────────
+
+export type MaintenancePriority = 'urgent' | 'high' | 'medium' | 'low';
+export type MaintenanceStatus   = 'open' | 'acknowledged' | 'in-progress' | 'closed';
+
+export interface MaintenanceAction {
+  id:                string;
+  priority:          MaintenancePriority;
+  action:            string;
+  component:         string;
+  reason:            string;
+  evidence:          string[];
+  estimatedDowntime: string;   // e.g. "4 hours"
+  tradeRequired:     string;   // e.g. "Avionics Tech"
+  inspectionItems:   string[];
+  status:            MaintenanceStatus;
+  linkedFaultId?:    string;
+  createdAt:         Date;
+  updatedAt:         Date;
+}
+
+// ─── Extended Start Scenario ─────────────────────────────────────────────────
+
+export type ExtendedStartScenario =
+  | 'normal'
+  | 'hot-start'
+  | 'hung-start'
+  | 'compressor-fouling'
+  | 'sensor-drift'
+  | 'fuel-anomaly'
+  | 'secu-fault'
+  | 'high-vibration'
+  | 'thermal-creep'
+  | 'data-dropout';
+

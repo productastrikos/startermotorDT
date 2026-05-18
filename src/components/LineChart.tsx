@@ -74,51 +74,60 @@ export function LineChart({ data, title, color = "#10b981", yAxisLabel, xAxisLab
       ctx.fillText(value.toFixed(1), padding.left - 10, y + 4);
     }
 
+    // Draw filled area under line
+    ctx.beginPath();
+    data.forEach((point, index) => {
+      const x = getX(index);
+      const y = getY(point.y);
+      if (index === 0) ctx.moveTo(x, y);
+      else {
+        const prevX = getX(index - 1);
+        const prevY = getY(data[index - 1].y);
+        const cpX = (prevX + x) / 2;
+        ctx.bezierCurveTo(cpX, prevY, cpX, y, x, y);
+      }
+    });
+    const lineEndX = getX(data.length - 1);
+    const lineStartX = getX(0);
+    ctx.lineTo(lineEndX, padding.top + plotHeight);
+    ctx.lineTo(lineStartX, padding.top + plotHeight);
+    ctx.closePath();
+    const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + plotHeight);
+    gradient.addColorStop(0, color + "33");
+    gradient.addColorStop(1, color + "00");
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Draw smooth line on top
     ctx.beginPath();
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.lineJoin = "round";
-
+    ctx.lineCap = "round";
     data.forEach((point, index) => {
       const x = getX(index);
       const y = getY(point.y);
-
-      if (index === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
+      if (index === 0) ctx.moveTo(x, y);
+      else {
+        const prevX = getX(index - 1);
+        const prevY = getY(data[index - 1].y);
+        const cpX = (prevX + x) / 2;
+        ctx.bezierCurveTo(cpX, prevY, cpX, y, x, y);
       }
     });
     ctx.stroke();
-
-    data.forEach((point, index) => {
-      const x = getX(index);
-      const y = getY(point.y);
-
-      ctx.beginPath();
-      ctx.arc(x, y, 3, 0, 2 * Math.PI);
-      ctx.fillStyle = color;
-      ctx.fill();
-    });
-    // Draw dashed line for current cycle (last data point)
-    const currentIndex = data.length - 4; // or any specific cycle index
-    const currentX = getX(currentIndex);
-
-    ctx.save();
+    // Draw a single endpoint dot for the current (latest) value
+    const dotX = getX(data.length - 1);
+    const dotY = getY(data[data.length - 1].y);
     ctx.beginPath();
-    ctx.setLineDash([6, 6]); // dashed pattern
-    ctx.moveTo(currentX, padding.top);
-    ctx.lineTo(currentX, chartHeight - padding.bottom);
-    ctx.strokeStyle = "#0b69f5ff"; // amber / orange for visibility
-    ctx.lineWidth = 1.5;
+    ctx.arc(dotX, dotY, 3.5, 0, 2 * Math.PI);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(dotX, dotY, 3.5, 0, 2 * Math.PI);
+    ctx.strokeStyle = "rgba(255,255,255,0.5)";
+    ctx.lineWidth = 1;
     ctx.stroke();
-    ctx.restore();
-
-    // optional: label
-    ctx.fillStyle = "#27fb24ff";
-    ctx.font = "12px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("Current", currentX, padding.top - 5);
     // const step = Math.ceil(data.length / 8);
     // let lastX = -Infinity;
     ctx.fillStyle = "#9ca3af";
