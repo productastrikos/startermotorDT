@@ -59,9 +59,9 @@ export default function CWMLoginPage({ onLogin, theme = 'dark', onThemeToggle }:
         <div className="space-y-4">
           {[
             { icon: '📊', label: 'Live Telemetry Dashboard', desc: 'Real-time JPT1, NGG, P2/P1 and health KPIs' },
-            { icon: '🧠', label: 'PHM & Prognostics',        desc: 'RUL prediction, creep life, thermal fatigue' },
+            { icon: '🧠', label: 'PHM & Prognostics',        desc: 'RUL prediction, hot-start risk, virtual sensor diagnostics' },
             { icon: '⚡', label: 'Start Sequence Sim',       desc: 'Animated light-up timeline with AI advisories' },
-            { icon: '🔩', label: 'FEA / FMEA Analysis',      desc: 'Structural stress, failure modes and RPN scoring' },
+            { icon: '🔩', label: 'FMEA Analysis',             desc: 'Start-cycle failure modes and RPN scoring' },
           ].map(f => (
             <div key={f.label} className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-lg flex items-center justify-center text-base flex-shrink-0" style={{ background: 'var(--cwm-accent-bg)', border: '1px solid var(--cwm-accent-border)' }}>{f.icon}</div>

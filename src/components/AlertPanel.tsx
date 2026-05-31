@@ -1,4 +1,3 @@
-import React from 'react';
 import { Alert } from '../services/socket';
 
 const typeColors: Record<string, { bg: string; border: string; text: string; dot: string }> = {

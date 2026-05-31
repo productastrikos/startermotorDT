@@ -1,25 +1,31 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect, Component } from 'react';
+import type { ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SocketProvider } from './services/socket';
 import AppLayout from './components/cwm/Layout';
 import CWMLoginPage from './pages/CWMLoginPage';
 import ProfilePage from './pages/CWMProfile';
-import { OverviewPage }          from './pages/OverviewPage';
-import { StartSequencePage }     from './pages/StartSequencePage';
-import { PHMPage }               from './pages/PHMPage';
-import { FMEAPage }              from './pages/FMEAPage';
-import { FEAAnalyticsPage }      from './pages/FEAAnalyticsPage';
-import { FEAFMEAPage }           from './pages/FEAFMEAPage';
-import { VVPage }                from './pages/VVPage';
-import { SmartOptimizationPage } from './pages/SmartOptimizationPage';
-import LiveTelemetryPage         from './pages/LiveTelemetryPage';
-import DigitalTwinPage           from './pages/DigitalTwinPage';
-import FaultDetectionPage        from './pages/FaultDetectionPage';
-import PhysicsModelPage          from './pages/PhysicsModelPage';
-import PrognosticsPage           from './pages/PrognosticsPage';
-import MaintenancePage           from './pages/MaintenancePage';
-import ScenarioSimulatorPage     from './pages/ScenarioSimulatorPage';
-import { useGTSUStore }          from './store/useGTSUStore';
+import PostFlightAnalysisPage from './pages/PostFlightAnalysisPage';
+import ProcessSimulatorPage   from './pages/ProcessSimulatorPage';
+import LifeCyclePage          from './pages/LifeCyclePage';
+import SandboxPage            from './pages/SandboxPage';
+
+class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null };
+  static getDerivedStateFromError(e: Error) { return { error: e }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 32, fontFamily: 'monospace', color: '#dc2626', background: '#0f172a', minHeight: '100vh' }}>
+          <h2 style={{ marginBottom: 8 }}>Application Error</h2>
+          <pre style={{ whiteSpace: 'pre-wrap', color: '#f87171', fontSize: 12 }}>{String(this.state.error)}</pre>
+          <button onClick={() => this.setState({ error: null })} style={{ marginTop: 16, padding: '6px 14px', background: '#1e3a5f', color: '#93c5fd', border: '1px solid #3b82f6', borderRadius: 4, cursor: 'pointer' }}>Retry</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function App() {
   const [user, setUser]   = useState<Record<string, unknown> | null>(() => {
@@ -28,26 +34,11 @@ function App() {
   const [theme, setTheme] = useState<'dark' | 'light'>(() =>
     (localStorage.getItem('cwm_theme') as 'dark' | 'light') || 'dark'
   );
-  const { refreshTelemetry, tickSimulation, simulation } = useGTSUStore();
 
   useEffect(() => {
     document.body.dataset.theme = theme;
     localStorage.setItem('cwm_theme', theme);
   }, [theme]);
-
-  // Refresh live telemetry every 5 s when not simulating
-  useEffect(() => {
-    if (simulation.isRunning) return;
-    const id = setInterval(refreshTelemetry, 5000);
-    return () => clearInterval(id);
-  }, [simulation.isRunning, refreshTelemetry]);
-
-  // Tick simulation at 1 Hz when running
-  useEffect(() => {
-    if (!simulation.isRunning) return;
-    const id = setInterval(tickSimulation, 1000);
-    return () => clearInterval(id);
-  }, [simulation.isRunning, tickSimulation]);
 
   const handleLogin = (userData: Record<string, unknown>, token: string) => {
     localStorage.setItem('cwm_token', token);
@@ -70,31 +61,22 @@ function App() {
   }
 
   return (
+    <RootErrorBoundary>
     <BrowserRouter>
       <SocketProvider>
         <AppLayout user={user} onLogout={handleLogout} theme={theme} onThemeToggle={toggleTheme}>
           <Routes>
-            <Route path="/"                    element={<OverviewPage />} />
-            <Route path="/start-sequence"      element={<StartSequencePage />} />
-            <Route path="/phm"                 element={<PHMPage />} />
-            <Route path="/fmea"                element={<FMEAPage />} />
-            <Route path="/fea-analytics"       element={<FEAAnalyticsPage />} />
-            <Route path="/fea-fmea"            element={<FEAFMEAPage />} />
-            <Route path="/vv-compliance"       element={<VVPage />} />
-            <Route path="/smart-optimization"  element={<SmartOptimizationPage />} />
-            <Route path="/live-telemetry"      element={<LiveTelemetryPage />} />
-            <Route path="/digital-twin"        element={<DigitalTwinPage />} />
-            <Route path="/fault-detection"     element={<FaultDetectionPage />} />
-            <Route path="/physics-model"       element={<PhysicsModelPage />} />
-            <Route path="/prognostics"         element={<PrognosticsPage />} />
-            <Route path="/maintenance"         element={<MaintenancePage />} />
-            <Route path="/scenario-sim"        element={<ScenarioSimulatorPage />} />
-            <Route path="/profile"             element={<ProfilePage user={user} onLogout={handleLogout} />} />
-            <Route path="*"                    element={<Navigate to="/" replace />} />
+            <Route path="/"            element={<PostFlightAnalysisPage />} />
+            <Route path="/simulator"   element={<ProcessSimulatorPage />} />
+            <Route path="/life-cycle"  element={<LifeCyclePage />} />
+            <Route path="/sandbox"     element={<SandboxPage />} />
+            <Route path="/profile"     element={<ProfilePage user={user} onLogout={handleLogout} />} />
+            <Route path="*"            element={<Navigate to="/" replace />} />
           </Routes>
         </AppLayout>
       </SocketProvider>
     </BrowserRouter>
+    </RootErrorBoundary>
   );
 }
 

@@ -1,139 +1,58 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useData } from '../../services/socket';
-import { useGTSUStore } from '../../store/useGTSUStore';
 import AlertPanel from '../AlertPanel';
 import AdvisoryPanel from '../AdvisoryPanel';
 
 /* ─── Navigation structure ─────────────────────────────── */
 const NAV_SECTIONS = [
   {
-    label: 'Monitor',
+    label: 'Workspace',
     items: [
-      { path: '/',               icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4', label: 'GTSU Overview' },
-      { path: '/start-sequence', icon: 'M13 10V3L4 14h7v7l9-11h-7z', label: 'Start Sequence' },
-      { path: '/phm',            icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', label: 'PHM Dashboard' },
-    ],
-  },
-  {
-    label: 'Digital Twin',
-    items: [
-      { path: '/live-telemetry',  icon: 'M22 12h-4l-3 9L9 3l-3 9H2', label: 'Live Telemetry' },
-      { path: '/digital-twin',    icon: 'M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5', label: '3D Digital Twin' },
-      { path: '/fault-detection', icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z', label: 'Fault Detection' },
-      { path: '/physics-model',   icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5', label: 'Physics Model' },
-    ],
-  },
-  {
-    label: 'Prognostics',
-    items: [
-      { path: '/prognostics',    icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', label: 'RUL & Health' },
-      { path: '/maintenance',    icon: 'M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z', label: 'Maintenance' },
-    ],
-  },
-  {
-    label: 'Analysis',
-    items: [
-      { path: '/fmea',              icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01', label: 'FMEA Analysis' },
-      { path: '/fea-analytics',     icon: 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4v16', label: 'FEA / Structural' },
-      { path: '/fea-fmea',          icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z', label: 'FEA + FMEA' },
-      { path: '/smart-optimization',icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z', label: 'Smart Optimization' },
-      { path: '/scenario-sim',      icon: 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z', label: 'Scenario Simulator' },
-    ],
-  },
-  {
-    label: 'Compliance',
-    items: [
-      { path: '/vv-compliance', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', label: 'V&V Compliance' },
+      { path: '/',           icon: 'M9 17v-6h6v6m4-9H5m14 0a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8a2 2 0 012-2m14 0V5a2 2 0 00-2-2H7a2 2 0 00-2 2v3', label: 'Post-Flight Analysis' },
+      { path: '/simulator',  icon: 'M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5', label: '3D Process Simulator' },
+      { path: '/life-cycle', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Life Cycle & Reliability' },
+      { path: '/sandbox',    icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z', label: 'Performance Sandbox' },
     ],
   },
 ];
 
 const PAGE_TITLES: Record<string, string> = {
-  '/':                   'GTSU Overview',
-  '/start-sequence':     'Start Sequence',
-  '/phm':                'PHM Dashboard',
-  '/fmea':               'FMEA Analysis',
-  '/fea-analytics':      'FEA / Structural',
-  '/fea-fmea':           'FEA + FMEA',
-  '/smart-optimization': 'Smart Optimization',
-  '/vv-compliance':      'V&V Compliance',
-  '/live-telemetry':     'Live Telemetry',
-  '/digital-twin':       '3D Digital Twin',
-  '/fault-detection':    'Fault Detection',
-  '/physics-model':      'Physics Model',
-  '/prognostics':        'RUL & Health',
-  '/maintenance':        'Maintenance',
-  '/scenario-sim':       'Scenario Simulator',
-  '/profile':            'Profile',
+  '/':           'Post-Flight Analysis',
+  '/simulator':  '3D Process Simulator',
+  '/life-cycle': 'Life Cycle & Reliability',
+  '/sandbox':    'Performance Sandbox',
+  '/profile':    'Profile',
 };
 
 const SEARCH_INDEX = [
-  /* ── Overview ── */
-  { label:'GTSU Overview',         path:'/',            breadcrumb:['Overview'],                          icon:'📊', keywords:'dashboard telemetry jpt ngg p2p1 health rul' },
-  { label:'JPT1 Temperature',      path:'/',            breadcrumb:['Overview','KPIs'],                   icon:'🌡', keywords:'jpt1 jet pipe temperature celsius ground limit 900' },
-  { label:'NGG Speed',             path:'/',            breadcrumb:['Overview','KPIs'],                   icon:'⚙', keywords:'ngg gas generator speed rpm percent' },
-  { label:'P2/P1 Ratio',           path:'/',            breadcrumb:['Overview','KPIs'],                   icon:'📈', keywords:'p2p1 pressure ratio compressor inlet' },
-  { label:'Remaining Useful Life', path:'/',            breadcrumb:['Overview','KPIs'],                   icon:'⏱', keywords:'rul remaining useful life hours prediction' },
-  { label:'Engine Efficiency',     path:'/',            breadcrumb:['Overview','KPIs'],                   icon:'⚡', keywords:'engine efficiency percent performance' },
-  { label:'System Availability',   path:'/',            breadcrumb:['Overview','KPIs'],                   icon:'✅', keywords:'availability uptime system percent' },
-  { label:'Compressor Fouling',    path:'/',            breadcrumb:['Overview','Health'],                 icon:'📊', keywords:'fouling compressor index health degradation' },
-  { label:'Creep Life',            path:'/',            breadcrumb:['Overview','Health'],                 icon:'📊', keywords:'creep life consumption turbine blade' },
-  { label:'Hot Start Risk',        path:'/',            breadcrumb:['Overview','Health'],                 icon:'🔥', keywords:'hot start risk abort hung start sequence' },
-  { label:'SECU Status',           path:'/',            breadcrumb:['Overview','System'],                 icon:'🖥', keywords:'secu main backup health digital control unit' },
-  { label:'IPS Mode',              path:'/',            breadcrumb:['Overview','System'],                 icon:'🛡', keywords:'ips ignition power supply mode normal emergency' },
-  { label:'AI Recommendations',    path:'/',            breadcrumb:['Overview','AI'],                     icon:'🤖', keywords:'ai advisory recommendation action priority' },
+  /* ── Post-Flight Analysis ── */
+  { label:'Post-Flight Analysis', path:'/',           breadcrumb:['Workspace'],                 icon:'✈', keywords:'post flight analysis simulation cycles faults improvement landing' },
+  { label:'Run Flight Simulation',path:'/',           breadcrumb:['Workspace','Action'],        icon:'▶', keywords:'simulate flight hours duration cycles generate trigger' },
+  { label:'Start Cycle Log',      path:'/',           breadcrumb:['Workspace','Cycles'],        icon:'📋', keywords:'start cycle log table 40 second status fault' },
+  { label:'Fault Breakdown',      path:'/',           breadcrumb:['Workspace','Faults'],        icon:'⚠', keywords:'fault reason breakdown hot start hung compressor' },
 
-  /* ── Start Sequence ── */
-  { label:'Start Sequence',        path:'/start-sequence', breadcrumb:['Start Sequence'],               icon:'⚡', keywords:'start sequence ignition light-up ng jpt timeline' },
-  { label:'Normal Start',          path:'/start-sequence', breadcrumb:['Start Sequence','Scenarios'],   icon:'⚡', keywords:'normal start scenario ground run standard' },
-  { label:'Hot Relight',           path:'/start-sequence', breadcrumb:['Start Sequence','Scenarios'],   icon:'⚡', keywords:'hot relight scenario air start altitude' },
-  { label:'Cold Soak Start',       path:'/start-sequence', breadcrumb:['Start Sequence','Scenarios'],   icon:'⚡', keywords:'cold soak low temperature start extreme' },
-  { label:'Degraded Start',        path:'/start-sequence', breadcrumb:['Start Sequence','Scenarios'],   icon:'⚡', keywords:'degraded start fouled compressor worn turbine' },
-  { label:'Start Timeline Chart',  path:'/start-sequence', breadcrumb:['Start Sequence','Chart'],       icon:'⚡', keywords:'start timeline jpt ngg phases ignition self-sustaining' },
-  { label:'Light-Up Detection',    path:'/start-sequence', breadcrumb:['Start Sequence','Phases'],      icon:'⚡', keywords:'light-up detection 135 jpt phase transition' },
-  { label:'Self-Sustaining Speed', path:'/start-sequence', breadcrumb:['Start Sequence','Phases'],      icon:'⚡', keywords:'self-sustaining speed ngg 57.4 phase' },
+  /* ── 3D Process Simulator ── */
+  { label:'3D Process Simulator', path:'/simulator',  breadcrumb:['Workspace'],                 icon:'⚙', keywords:'3d simulator process physics replay cycle visualization' },
+  { label:'Replay Cycle',         path:'/simulator',  breadcrumb:['Workspace','Replay'],        icon:'▶', keywords:'replay cycle play pause speed 3d visualization' },
+  { label:'Live Test-Rig Mode',   path:'/simulator',  breadcrumb:['Workspace','Live'],          icon:'●', keywords:'live telemetry test rig ingest real time stream physical engine' },
+  { label:'Phase Indicator',      path:'/simulator',  breadcrumb:['Workspace','Phases'],        icon:'⚡', keywords:'phase cranking light up acceleration self sustaining' },
 
-  /* ── PHM ── */
-  { label:'PHM Dashboard',         path:'/phm',         breadcrumb:['PHM'],                             icon:'🧠', keywords:'phm prognostics health management prediction' },
-  { label:'RUL Prediction',        path:'/phm',         breadcrumb:['PHM','Prognostics'],               icon:'⏱', keywords:'remaining useful life prediction hours degradation trend' },
-  { label:'Creep Life Consumption',path:'/phm',         breadcrumb:['PHM','Life Usage'],                icon:'🧠', keywords:'creep life consumption turbine blade thermal cycling' },
-  { label:'Thermal Fatigue',       path:'/phm',         breadcrumb:['PHM','Life Usage'],                icon:'🧠', keywords:'thermal fatigue accumulation start-stop cycles' },
-  { label:'Compressor Health',     path:'/phm',         breadcrumb:['PHM','Diagnostics'],               icon:'🧠', keywords:'compressor health fouling index washing interval' },
-  { label:'Vibration Analysis',    path:'/phm',         breadcrumb:['PHM','Vibration'],                 icon:'📳', keywords:'vibration spectrum fft frequency amplitude bearing' },
-  { label:'Maintenance Forecast',  path:'/phm',         breadcrumb:['PHM','Maintenance'],               icon:'🔧', keywords:'maintenance forecast schedule next overhaul interval' },
+  /* ── Life Cycle & Reliability ── */
+  { label:'Life Cycle & Reliability', path:'/life-cycle', breadcrumb:['Workspace'],            icon:'⏱', keywords:'life cycle reliability wear degradation component fail first' },
+  { label:'Life-Limiting Component',  path:'/life-cycle', breadcrumb:['Workspace','Forecast'], icon:'🔥', keywords:'fail first life limit component dictates engine' },
+  { label:'Engine Life Limit',        path:'/life-cycle', breadcrumb:['Workspace','Forecast'], icon:'⏱', keywords:'engine life limit hours remaining forecast' },
+  { label:'Wear Progression',         path:'/life-cycle', breadcrumb:['Workspace','Wear'],     icon:'📈', keywords:'wear progression chart cumulative component history' },
 
-  /* ── FMEA ── */
-  { label:'FMEA Analysis',         path:'/fmea',        breadcrumb:['FMEA'],                            icon:'⚠', keywords:'fmea failure mode effects analysis risk rpn' },
-  { label:'RPN Score',             path:'/fmea',        breadcrumb:['FMEA','Risk'],                     icon:'⚠', keywords:'rpn risk priority number severity occurrence detection' },
-  { label:'Critical Failure Modes',path:'/fmea',        breadcrumb:['FMEA','Failures'],                 icon:'⚠', keywords:'critical failure compressor blade turbine flameout' },
-  { label:'Control Modes',         path:'/fmea',        breadcrumb:['FMEA','Controls'],                 icon:'⚠', keywords:'control mode mitigation action preventive maintenance' },
-
-  /* ── FEA Analytics ── */
-  { label:'FEA / Structural',      path:'/fea-analytics', breadcrumb:['FEA Analytics'],                 icon:'🔩', keywords:'fea finite element analysis stress strain structural' },
-  { label:'Von Mises Stress',      path:'/fea-analytics', breadcrumb:['FEA Analytics','Stress'],        icon:'🔩', keywords:'von mises stress distribution MPa yield limit' },
-  { label:'Thermal Gradient',      path:'/fea-analytics', breadcrumb:['FEA Analytics','Thermal'],       icon:'🔩', keywords:'thermal gradient temperature distribution hotspot' },
-  { label:'Design Iterations',     path:'/fea-analytics', breadcrumb:['FEA Analytics','Iterations'],    icon:'🔩', keywords:'design iteration optimization weight stress fatigue' },
-
-  /* ── FEA+FMEA ── */
-  { label:'FEA + FMEA Combined',   path:'/fea-fmea',    breadcrumb:['FEA + FMEA'],                     icon:'📋', keywords:'combined fea fmea structural failure correlation' },
-  { label:'Component Risk Map',    path:'/fea-fmea',    breadcrumb:['FEA + FMEA','Risk'],               icon:'📋', keywords:'component risk map stress failure mode combined' },
-
-  /* ── Smart Optimization ── */
-  { label:'Smart Optimization',    path:'/smart-optimization', breadcrumb:['Smart Optimization'],       icon:'💡', keywords:'optimization advisory simulation before after improvement' },
-  { label:'Fuel Consumption',      path:'/smart-optimization', breadcrumb:['Smart Optimization','KPIs'],icon:'💡', keywords:'fuel mass flow consumption efficiency reduction' },
-  { label:'Simulation Comparison', path:'/smart-optimization', breadcrumb:['Smart Optimization','Sim'],icon:'💡', keywords:'before after simulation trace comparison improvement' },
-  { label:'Advisory Application',  path:'/smart-optimization', breadcrumb:['Smart Optimization','AI'], icon:'💡', keywords:'apply advisory recommendation simulation result' },
-
-  /* ── V&V Compliance ── */
-  { label:'V&V Compliance',        path:'/vv-compliance', breadcrumb:['V&V Compliance'],               icon:'🛡', keywords:'verification validation compliance do-178c mil-std iso' },
-  { label:'DO-178C',               path:'/vv-compliance', breadcrumb:['V&V Compliance','Standards'],   icon:'🛡', keywords:'do-178c airborne software certification compliance' },
-  { label:'MIL-STD-1553B',         path:'/vv-compliance', breadcrumb:['V&V Compliance','Standards'],   icon:'🛡', keywords:'mil-std-1553b bus communication compliance interface' },
-  { label:'ISO 23247',             path:'/vv-compliance', breadcrumb:['V&V Compliance','Standards'],   icon:'🛡', keywords:'iso 23247 digital twin manufacturing standard' },
-  { label:'Test Coverage',         path:'/vv-compliance', breadcrumb:['V&V Compliance','Testing'],     icon:'🛡', keywords:'test coverage unit integration system acceptance' },
+  /* ── Performance Sandbox ── */
+  { label:'Performance Sandbox',  path:'/sandbox',    breadcrumb:['Workspace'],                 icon:'🔬', keywords:'sandbox performance optimization power sfc fuel blade rpm' },
+  { label:'Fuel Flow',            path:'/sandbox',    breadcrumb:['Workspace','Inputs'],        icon:'⛽', keywords:'fuel flow kg per hour input parameter slider' },
+  { label:'Blade Angle (IGV)',    path:'/sandbox',    breadcrumb:['Workspace','Inputs'],        icon:'🌀', keywords:'blade angle igv inlet guide vane parameter' },
+  { label:'RPM Target',           path:'/sandbox',    breadcrumb:['Workspace','Inputs'],        icon:'⚙', keywords:'rpm target ngg percent input parameter' },
+  { label:'Power vs SFC',         path:'/sandbox',    breadcrumb:['Workspace','Outputs'],       icon:'📊', keywords:'power sfc specific fuel consumption trade off comparison' },
 
   /* ── Profile ── */
-  { label:'Profile',               path:'/profile',     breadcrumb:['Profile'],                         icon:'👤', keywords:'account settings user role preferences' },
+  { label:'Profile',              path:'/profile',    breadcrumb:['Profile'],                   icon:'👤', keywords:'account settings user role preferences' },
 ];
 
 function SvgIcon({ d, size = 'w-4 h-4', strokeWidth = 1.6 }: { d: string; size?: string; strokeWidth?: number }) {
@@ -158,11 +77,6 @@ export default function Layout({ children, user, onLogout, theme = 'dark', onThe
   const navigate  = useNavigate();
   const location  = useLocation();
   const { alerts, advisories, acknowledgeAlert, acknowledgeAdvisory } = useData();
-  const telemetry    = useGTSUStore(s => s.telemetry);
-  const health       = useGTSUStore(s => s.health);
-  const extSim       = useGTSUStore(s => s.extSim);
-  const activeFaults = useGTSUStore(s => s.activeFaults);
-  const dataQuality  = useGTSUStore(s => s.dataQuality);
   const [showAlerts,   setShowAlerts]   = useState(false);
   const [showAdvisory, setShowAdvisory] = useState(false);
   const [showProfile,  setShowProfile]  = useState(false);
@@ -241,21 +155,6 @@ export default function Layout({ children, user, onLogout, theme = 'dark', onThe
   const initials             = user?.fullName?.charAt(0) || 'U';
 
   /* ── Mission-bar derived values ─────────────────────────── */
-  const hasCritical = activeFaults?.some(f => f.severity === 'critical' && f.status !== 'resolved');
-  const hasWarning  = activeFaults?.some(f => f.severity === 'warning'  && f.status !== 'resolved');
-  const readiness   = hasCritical ? 'NO-GO' : hasWarning ? 'WATCH' : 'GO';
-  const readinessInlineStyle = readiness === 'NO-GO'
-    ? { color: 'var(--cwm-danger)', borderColor: 'var(--cwm-danger-border)', background: 'var(--cwm-danger-bg)' }
-    : readiness === 'WATCH'
-    ? { color: 'var(--cwm-warning)', borderColor: 'var(--cwm-warning-border)', background: 'var(--cwm-warning-bg)' }
-    : { color: 'var(--cwm-success)', borderColor: 'var(--cwm-success-border)', background: 'var(--cwm-success-bg)' };
-  const phaseLabel = extSim?.isRunning
-    ? `SIM – ${extSim.scenario?.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || '—'}`
-    : `LIVE – ${telemetry?.startPhase?.toUpperCase() ?? 'STANDBY'}`;
-  const secuOk    = telemetry?.secuMainHealthy !== false;
-  const dqPct     = typeof dataQuality === 'number' ? dataQuality * 100 : 100;
-  const readinessNum = health?.starterReadiness ?? 0;
-
   return (
     <div className={`theme-${theme} h-screen w-screen flex overflow-hidden bg-cwm-dark`}>
 
@@ -448,7 +347,7 @@ export default function Layout({ children, user, onLogout, theme = 'dark', onThe
 
         {/* ── CONTENT + PANELS ──────────────────────────────────── */}
         <div className="flex-1 flex overflow-hidden">
-          <main className={`flex-1 ${location.pathname === '/digital-twin' ? 'overflow-hidden' : 'overflow-auto p-4'}`}>
+          <main className="flex-1 overflow-auto p-4">
             {children}
           </main>
 

@@ -52,4 +52,30 @@ export const acknowledgeAdvisory = (id: string) => api.put(`/advisories/${id}/ac
 export const getWeather = () => api.get('/weather');
 export const getZones = () => api.get('/zones');
 
+// ─── Flight Database (FastAPI backend on port 8000) ──────────────────────────
+
+import type { BackendFlight, BackendCycle, TraceRow } from '../types/engine';
+
+const FLIGHT_DB = typeof window !== 'undefined'
+  ? `${window.location.protocol}//${window.location.hostname}:8000/api`
+  : 'http://localhost:8000/api';
+
+const flightApi = axios.create({ baseURL: FLIGHT_DB, timeout: 30000 });
+
+/** List all flights (metadata only). */
+export const getBackendFlights = () =>
+  flightApi.get<BackendFlight[]>('/flights');
+
+/** Single flight metadata + cycle summaries. */
+export const getBackendFlight = (id: number) =>
+  flightApi.get<BackendFlight & { cycles: BackendCycle[] }>(`/flights/${id}`);
+
+/** Full 1-Hz trace for a flight. Large (~2-3 MB per flight). */
+export const getFlightTrace = (id: number) =>
+  flightApi.get<TraceRow[]>(`/flights/${id}/trace`);
+
+/** Check backend reachability. */
+export const pingFlightDB = () =>
+  flightApi.get<{ status: string }>('/health', { timeout: 3000 });
+
 export default api;

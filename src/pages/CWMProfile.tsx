@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 interface ProfilePageProps {
   user?: Record<string, unknown>;
@@ -10,7 +10,7 @@ const ACTIVITY_LOG = [
   { action:'Ran Normal Start simulation — advisories applied',          time:'09:18', type:'sim'     },
   { action:'Viewed PHM Dashboard — RUL trend analysis',                time:'09:10', type:'nav'     },
   { action:'Acknowledged advisory: Start sequence optimisation',        time:'08:55', type:'advisory'},
-  { action:'Reviewed FMEA — updated HPT blade RPN score',              time:'08:40', type:'analysis'},
+  { action:'Reviewed FMEA — updated Hung Start RPN score',              time:'08:40', type:'analysis'},
   { action:'Logged in',                                                 time:'08:30', type:'auth'    },
 ];
 

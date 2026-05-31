@@ -7,7 +7,7 @@ interface DataPoint {
 
 interface LineChartProps {
   data: DataPoint[];
-  title: string;
+  title?: string;
   color?: string;
   yAxisLabel?: string;
   xAxisLabel?: string;
@@ -93,8 +93,12 @@ export function LineChart({ data, title, color = "#10b981", yAxisLabel, xAxisLab
     ctx.lineTo(lineStartX, padding.top + plotHeight);
     ctx.closePath();
     const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + plotHeight);
-    gradient.addColorStop(0, color + "33");
-    gradient.addColorStop(1, color + "00");
+    // Use rgba fallback when color is a CSS variable (canvas cannot resolve CSS vars)
+    const isCssVar = color.startsWith('var(');
+    const fillTop  = isCssVar ? 'rgba(99,102,241,0.20)' : color + '33';
+    const fillBot  = isCssVar ? 'rgba(99,102,241,0.00)' : color + '00';
+    gradient.addColorStop(0, fillTop);
+    gradient.addColorStop(1, fillBot);
     ctx.fillStyle = gradient;
     ctx.fill();
 

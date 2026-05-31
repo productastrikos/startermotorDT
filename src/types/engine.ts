@@ -53,20 +53,9 @@ export interface GTSUHealthState {
   starterReadiness: number;
   rul: number;
   rulCycles: number;
-  compressorFoulingIndex: number;
-  creepLifeConsumption: number;
-  thermalFatigueAccumulation: number;
   hotStartRisk: number;
   hungStartProbability: number;
   virtualSensorConfidence: number;
-  baselineJpt1: number;
-  baselineP2p1: number;
-  residualJpt1: number;
-  residualP2p1: number;
-  /** Compressor component health score 0–100 (100 = new, 0 = failed) */
-  compressorHealth: number;
-  /** Combustor / hot-section health score 0–100 */
-  combustorHealth: number;
 }
 
 // ─── Start-sequence time-series ──────────────────────────────────────────────
@@ -80,22 +69,6 @@ export interface StartCycleSample {
   fuelFlow: number;
   phase: StartPhase;
   event?: string;
-}
-
-// ─── Structural / thermal FEA data ──────────────────────────────────────────
-
-export interface FEAData {
-  timestamp: Date;
-  componentName: string;
-  maxStress: number;
-  yieldStrength: number;
-  stressToYieldRatio: number;
-  fatigueLifeRemaining: number;
-  thermalStressMargin: number;
-  displacement: number;
-  material: string;
-  creepParameter?: number;
-  temperature: number;
 }
 
 // ─── FMEA ────────────────────────────────────────────────────────────────────
@@ -144,7 +117,6 @@ export interface PerformanceMetric extends GTSUTelemetry {
   flightCycle?: number;
   systemAvailability?: number;
   remainingUsefulLife?: number;
-  engineEfficiency?: number;
 }
 
 export interface VibrationData {
@@ -159,8 +131,6 @@ export interface DesignIteration {
   iterationNumber: number;
   timestamp: Date;
   optimizationScore: number;
-  compressorEfficiency: number;
-  pressureRatio: number;
   thermalStressMargin: number;
   designParameters: Record<string, number>;
   fuelStepperBias: number;
@@ -203,11 +173,181 @@ export type ExtendedStartScenario =
   | 'normal'
   | 'hot-start'
   | 'hung-start'
-  | 'compressor-fouling'
   | 'sensor-drift'
   | 'fuel-anomaly'
   | 'secu-fault'
   | 'high-vibration'
-  | 'thermal-creep'
   | 'data-dropout';
 
+// ─── Flight Record / Start Cycle Domain ──────────────────────────────────────
+
+export type CycleStatus = 'success' | 'degraded' | 'faulty' | 'aborted';
+export type FaultReason =
+  | 'hot-start'
+  | 'hung-start'
+  | 'slow-light-up'
+  | 'fuel-overshoot'
+  | 'compressor-stall'
+  | 'sensor-drift'
+  | 'high-vibration';
+
+export interface CycleTraceSample {
+  t:           number;   // 0..durationSec
+  jpt1:        number;   // °C — ground limit 900, in-flight limit 1020
+  ngg:         number;   // RPM — light-up detection > 12,625 RPM
+  nggPct:      number;   // % of max (22,000 RPM)
+  p2p1:        number;   // dimensionless compressor pressure ratio (kPa tracking)
+  fuelFlow:    number;   // kg/h derived from stepper motor position
+  stepperPos:  number;   // discrete stepper steps 0-255 (Actuation & Control)
+  vibration:   number;   // mm/s
+  oat:         number;   // Outside Air Temperature °C (-100..+300 via ADU)
+  secuHealthy: boolean;  // SECU main-processor health — true = healthy
+  bitPass:     boolean;  // Built-In-Test (BIT) pass/fail
+  milBusWord:  number;   // MIL-STD-1553B status word (interpret as hex)
+  phase:       StartPhase;
+}
+
+export interface StartCycle {
+  id:                   string;
+  cycleNumber:          number;     // 1..N within flight
+  flightHour:           number;     // hour offset within flight
+  durationSec:          number;     // ≈40 nominal
+  status:               CycleStatus;
+  faultReason?:         FaultReason;
+  improvement?:         string;     // suggestion if faulty/degraded
+  peakJpt1:             number;
+  maxNggPct:            number;
+  minP2p1:              number;
+  fuelUsedKg:           number;
+  timeToSelfSustaining: number;     // seconds (or durationSec if never reached)
+  efficiency:           number;     // 0..100 (composite)
+  trace:                CycleTraceSample[];
+}
+
+export interface FlightRecord {
+  id:                string;
+  startTime:         Date;
+  durationHrs:       number;
+  cycles:            StartCycle[];
+  totalFuelKg:       number;
+  successCount:      number;
+  degradedCount:     number;
+  faultyCount:       number;
+  abortCount:        number;
+  avgEfficiency:     number;     // 0..100
+  avgCycleSec:       number;
+  improvementPotPct: number;     // estimated efficiency gain if recommendations applied
+}
+
+// ─── Component Wear (Life Cycle & Reliability) ──────────────────────────────
+
+export type ComponentCategory =
+  | 'turbine'
+  | 'compressor'
+  | 'combustor'
+  | 'fuel-system'
+  | 'control-unit'
+  | 'bearing';
+
+export interface ComponentWearRecord {
+  id:                  string;
+  name:                string;
+  category:            ComponentCategory;
+  designLifeCycles:    number;     // nominal life in start cycles
+  designLifeHrs:       number;     // nominal life in flight hours
+  consumedCycles:      number;     // accumulated from all flights
+  consumedHrs:         number;
+  wearPct:             number;     // 0..100
+  remainingLifeHrs:    number;
+  failureRisk:         number;     // 0..100
+  primaryStressor:     string;     // e.g. "thermal cycling", "vibration", "fuel impingement"
+}
+
+// ─── Sandbox Simulation ──────────────────────────────────────────────────────
+
+export interface SandboxInputs {
+  fuelFlowKgH:    number;   // 1..10
+  bladeAngleDeg:  number;   // -5..+15 inlet guide vane equivalent
+  rpmTargetPct:   number;   // 60..110 (% of Ngg max)
+  oat:            number;   // Outside Air Temperature °C (ambient normalization, ISA std = 15)
+}
+
+export interface SandboxOutputs {
+  powerKW:           number;
+  sfcKgPerKWh:       number;
+  jpt1PeakC:         number;
+  surgeMargin:       number;   // % — compressor stall margin
+  thermalStressIdx:  number;   // 0..100 — life-cycle cost per start
+  feasible:          boolean;
+  warnings:          string[];
+}
+
+export interface SandboxRun {
+  id:        string;
+  timestamp: Date;
+  inputs:    SandboxInputs;
+  outputs:   SandboxOutputs;
+}
+
+// ─── Backend Flight DB Types (from FastAPI / SQLite) ────────────────────────
+
+/** Flight metadata row from /api/flights */
+export interface BackendFlight {
+  id:              number;
+  label:           string;    // e.g. "Flight 003"
+  duration_hrs:    number;
+  n_cycles:        number;
+  date:            string;    // "2026-03-15"
+  success_rate:    number;    // 0-100
+  faulty_cycles:   number;
+  avg_jpt1:        number;    // °C
+  total_fuel_kg:   number;
+  total_trace_sec: number;
+}
+
+/** Cycle summary row from /api/flights/{id} */
+export interface BackendCycle {
+  id:            number;
+  flight_id:     number;
+  cycle_num:     number;
+  flight_hour:   number;
+  status:        CycleStatus;
+  fault_reason:  string;
+  improvement:   string;
+  duration_sec:  number;
+  peak_jpt1:     number;
+  max_ngg_pct:   number;
+  total_fuel_kg: number;
+  start_ts:      number;    // seconds from flight start
+  end_ts:        number;
+}
+
+/** 1-Hz trace row from /api/flights/{id}/trace */
+export interface TraceRow {
+  id:            number;
+  flight_id:     number;
+  cycle_num:     number;
+  ts:            number;    // absolute seconds from flight start
+  phase:         string;
+  jpt1:          number;
+  ngg_rpm:       number;
+  ngg_pct:       number;
+  p2p1:          number;
+  oat:           number;
+  stepper_pos:   number;
+  fuel_flow_kgh: number;
+  vibration:     number;
+  secu_healthy:  number;   // 0 | 1
+  bit_pass:      number;   // 0 | 1
+  mil_bus_word:  string;   // e.g. "0x0000"
+  status:        CycleStatus;
+  fault_reason:  string;
+  flight_hour:   number;
+}
+
+/** Fully loaded flight (metadata + cycles + trace) held in the store */
+export interface LoadedBackendFlight {
+  meta:   BackendFlight;
+  cycles: BackendCycle[];
+  trace:  TraceRow[];
+}

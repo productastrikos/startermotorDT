@@ -1,4 +1,3 @@
-import React from 'react';
 import { Advisory } from '../services/socket';
 
 const PRIORITY_META: Record<string, { border: string; bg: string; badge: string; dot: string; label: string; icon: string }> = {
